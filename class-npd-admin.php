@@ -89,9 +89,6 @@ class NPD_Admin {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'Donations', 'nonprofit-donations' ); ?></h1>
-			<?php if ( 'demo' === NPD_Settings::get( 'mode' ) ) : ?>
-				<div class="notice notice-warning inline"><p><?php echo esc_html__( 'Demo mode is on. Donations are practice only. Add Razorpay keys in Settings to take real payments.', 'nonprofit-donations' ); ?></p></div>
-			<?php endif; ?>
 			<?php if ( $fys ) : ?>
 				<p>
 					<?php foreach ( $fys as $r ) : ?>
@@ -312,6 +309,7 @@ class NPD_Admin {
 				<input type="hidden" name="action" value="npd_save">
 				<?php wp_nonce_field( 'npd_save' ); ?>
 				<table class="form-table" role="presentation">
+					<tr><th><label for="npd_mail"><?php echo esc_html__( 'Contact email for notices', 'nonprofit-donations' ); ?></label></th><td><input id="npd_mail" type="email" class="regular-text" name="notify_email" value="<?php echo esc_attr( $s['notify_email'] ); ?>" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>"><p class="description"><?php echo esc_html__( 'We send registration check results and expiry notices here.', 'nonprofit-donations' ); ?></p></td></tr>
 					<tr><th><label for="npd_org"><?php echo esc_html__( 'Organisation name', 'nonprofit-donations' ); ?></label></th><td><input id="npd_org" class="regular-text" name="org_name" value="<?php echo esc_attr( $s['org_name'] ); ?>"></td></tr>
 					<tr><th><label for="npd_vpa"><?php echo esc_html__( 'UPI ID (VPA)', 'nonprofit-donations' ); ?></label></th><td><input id="npd_vpa" class="regular-text" name="upi_vpa" value="<?php echo esc_attr( $s['upi_vpa'] ); ?>" placeholder="yourngo@bank" autocomplete="off">
 						<p class="description"><?php echo esc_html__( 'Your NGO bank account UPI ID. Donors pay it directly, no fees. You confirm each gift against your bank statement.', 'nonprofit-donations' ); ?></p></td></tr>
@@ -326,7 +324,6 @@ class NPD_Admin {
 					<tr><th><label for="npd_mode"><?php echo esc_html__( 'Mode', 'nonprofit-donations' ); ?></label></th><td>
 						<select id="npd_mode" name="mode">
 							<option value="upi" <?php selected( $s['mode'], 'upi' ); ?>><?php echo esc_html__( 'UPI direct (zero fees)', 'nonprofit-donations' ); ?></option>
-							<option value="demo" <?php selected( $s['mode'], 'demo' ); ?>><?php echo esc_html__( 'Demo (no real money)', 'nonprofit-donations' ); ?></option>
 							<option value="test" <?php selected( $s['mode'], 'test' ); ?>><?php echo esc_html__( 'Razorpay test keys', 'nonprofit-donations' ); ?></option>
 							<option value="live" <?php selected( $s['mode'], 'live' ); ?>><?php echo esc_html__( 'Live', 'nonprofit-donations' ); ?></option>
 						</select></td></tr>
@@ -350,9 +347,10 @@ class NPD_Admin {
 		}
 		check_admin_referer( 'npd_save' );
 		// phpcs:disable WordPress.Security.NonceVerification.Missing
-		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : 'demo';
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : 'upi';
 		$new  = array(
-			'mode'                => in_array( $mode, array( 'demo', 'upi', 'test', 'live' ), true ) ? $mode : 'demo',
+			'mode'                => in_array( $mode, array( 'upi', 'test', 'live' ), true ) ? $mode : 'upi',
+			'notify_email'        => isset( $_POST['notify_email'] ) ? sanitize_email( wp_unslash( $_POST['notify_email'] ) ) : '',
 			'org_name'            => isset( $_POST['org_name'] ) ? sanitize_text_field( wp_unslash( $_POST['org_name'] ) ) : '',
 			'upi_vpa'             => isset( $_POST['upi_vpa'] ) && NPD_Settings::valid_vpa( trim( sanitize_text_field( wp_unslash( $_POST['upi_vpa'] ) ) ) ) ? trim( sanitize_text_field( wp_unslash( $_POST['upi_vpa'] ) ) ) : '',
 			'upi_name'            => isset( $_POST['upi_name'] ) ? sanitize_text_field( wp_unslash( $_POST['upi_name'] ) ) : '',
