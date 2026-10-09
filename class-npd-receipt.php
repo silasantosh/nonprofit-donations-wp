@@ -19,6 +19,7 @@ class NPD_Receipt {
 		add_action( 'npd_donation_paid', array( __CLASS__, 'issue' ) );
 		add_action( 'admin_post_npd_export113', array( __CLASS__, 'export113' ) );
 		add_action( 'admin_post_npd_resend', array( __CLASS__, 'resend' ) );
+		add_action( 'admin_post_npd_testmail', array( __CLASS__, 'test_mail' ) );
 	}
 
 	/**
@@ -104,6 +105,51 @@ class NPD_Receipt {
 			$wpdb->query( $wpdb->prepare( "UPDATE {$t} SET receipt_sent_at = %s WHERE id = %d", current_time( 'mysql' ), $row->id ) );
 		}
 		return (bool) $sent;
+	}
+
+	/**
+	 * Admin: send a clearly marked TEST receipt to the notice address, to prove mail delivery.
+	 */
+	public static function test_mail() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Not allowed.', 'nonprofit-donations' ), 403 );
+		}
+		check_admin_referer( 'npd_testmail' );
+		$to  = (string) NPD_Settings::get( 'notify_email' );
+		$ok  = false;
+		if ( is_email( $to ) ) {
+			$row = (object) array(
+				'id'            => 0,
+				'receipt_no'    => 'TEST-0000',
+				'paid_at'       => current_time( 'mysql' ),
+				'pre_arn'       => '',
+				'donor_name'    => 'TEST ONLY - not a real donor',
+				'donor_address' => 'Sample address for a test receipt',
+				'pan_enc'       => '',
+				'amount_paise'  => 100000,
+				'mode'          => 'upi',
+				'utr'           => '',
+			);
+			$reg = array(
+				'number'   => 'TEST-NOT-A-REAL-NUMBER',
+				'valid_to' => '',
+				'pan'      => '',
+			);
+			$file = trailingslashit( get_temp_dir() ) . 'receipt-test-' . wp_generate_password( 6, false ) . '.pdf';
+			// phpcs:ignore WordPress.WP.AlternativeFunctions
+			if ( false !== file_put_contents( $file, self::build_pdf( $row, $reg ) ) ) {
+				$ok = wp_mail(
+					$to,
+					__( 'TEST: sample donation receipt', 'nonprofit-donations' ),
+					__( "This is a test email from the Nonprofit Donations plugin. It proves that this website can send email. The attached receipt is a sample with made-up details. It is not a real receipt.", 'nonprofit-donations' ),
+					'',
+					array( $file )
+				);
+				wp_delete_file( $file );
+			}
+		}
+		wp_safe_redirect( admin_url( 'admin.php?page=npd-settings&testmail=' . ( $ok ? 'sent' : 'failed' ) ) );
+		exit;
 	}
 
 	/**
