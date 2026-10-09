@@ -21,10 +21,9 @@ Honest note: UPI direct mode has no live auto-confirmation, because that needs a
 * Optional Razorpay Checkout (UPI, cards, netbanking), payment confirmed by signature check and webhook
 * Optional PAN, only when the donor asks for an 80G receipt. Stored encrypted.
 * Donor list, donations list with filters, CSV export
-* Demo mode: try everything with no real money
 * Works on phones first
 
-This plugin connects to Razorpay (https://razorpay.com) only when you add your keys and switch off demo mode. The Checkout script loads from checkout.razorpay.com on pages with the form. Razorpay terms: https://razorpay.com/terms/ and privacy: https://razorpay.com/privacy/
+This plugin connects to Razorpay (https://razorpay.com) only when you choose Razorpay mode and add your keys. The Checkout script loads from checkout.razorpay.com on pages with the form. Razorpay terms: https://razorpay.com/terms/ and privacy: https://razorpay.com/privacy/
 
 Milestone 1: one-time donations. Receipts and recurring gifts are planned.
 
