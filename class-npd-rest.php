@@ -120,7 +120,13 @@ class NPD_REST {
 		}
 		$want_80g = rest_sanitize_boolean( $req->get_param( 'want_80g' ) );
 		$pan_enc  = null;
+		$address  = '';
 		if ( $want_80g ) {
+			$address = sanitize_textarea_field( (string) $req->get_param( 'address' ) );
+			if ( strlen( $address ) < 10 ) {
+				return new WP_Error( 'npd_address', __( 'For an 80G receipt please enter your full address.', 'nonprofit-donations' ), array( 'status' => 400 ) );
+			}
+			$address = substr( $address, 0, 400 );
 			$pan = strtoupper( preg_replace( '/\s+/', '', (string) $req->get_param( 'pan' ) ) );
 			if ( ! preg_match( '/^[A-Z]{5}[0-9]{4}[A-Z]$/', $pan ) ) {
 				return new WP_Error( 'npd_pan', __( 'For an 80G receipt please enter a valid PAN (like ABCDE1234F).', 'nonprofit-donations' ), array( 'status' => 400 ) );
@@ -140,6 +146,7 @@ class NPD_REST {
 				'email'   => $email,
 				'phone'   => substr( $phone, 0, 20 ),
 				'pan_enc' => $pan_enc,
+				'address' => $address,
 			)
 		);
 		$don_id   = NPD_DB::add_donation(
