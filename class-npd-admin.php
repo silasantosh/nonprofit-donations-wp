@@ -341,6 +341,18 @@ class NPD_Admin {
 						<input name="f113_id_code" placeholder="ID Code" value="<?php echo esc_attr( $s['f113_id_code'] ); ?>"> <input name="f113_section" placeholder="Section Code" value="<?php echo esc_attr( $s['f113_section'] ); ?>"> <input name="f113_type" placeholder="Donation Type" value="<?php echo esc_attr( $s['f113_type'] ); ?>"> <input name="f113_mode" placeholder="Mode of receipt" value="<?php echo esc_attr( $s['f113_mode'] ); ?>">
 						<p class="description"><?php echo esc_html__( 'Type the exact dropdown values from the portal template. We do not guess them. Check the sheet against the portal template before you upload.', 'nonprofit-donations' ); ?></p>
 						<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=npd_export113&fy=' . rawurlencode( NPD_DB::fy_for( current_time( 'mysql' ) ) ) ), 'npd_export113' ) ); ?>"><?php echo esc_html__( 'Download filing sheet (this financial year)', 'nonprofit-donations' ); ?></a></p></td></tr>
+					<tr><th><?php echo esc_html__( 'Email check', 'nonprofit-donations' ); ?></th><td>
+						<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=npd_testmail' ), 'npd_testmail' ) ); ?>"><?php echo esc_html__( 'Send a test receipt to the notice email', 'nonprofit-donations' ); ?></a>
+						<?php
+						// phpcs:ignore WordPress.Security.NonceVerification
+						$tm = isset( $_GET['testmail'] ) ? sanitize_key( wp_unslash( $_GET['testmail'] ) ) : '';
+						if ( 'sent' === $tm ) {
+							echo ' <strong>' . esc_html__( 'Test email handed to the mail system. Check the inbox.', 'nonprofit-donations' ) . '</strong>';
+						} elseif ( 'failed' === $tm ) {
+							echo ' <strong style="color:#b32d2e">' . esc_html__( 'The test email could not be sent. Set a valid notice email and check your mail setup.', 'nonprofit-donations' ) . '</strong>';
+						}
+						?>
+						<p class="description"><?php echo esc_html__( 'Save settings first. Receipts need working email on your site.', 'nonprofit-donations' ); ?></p></td></tr>
 				</table>
 				<?php submit_button(); ?>
 			</form>
