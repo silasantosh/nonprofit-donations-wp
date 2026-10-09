@@ -116,22 +116,6 @@
 			busy(true);
 			post('donate', payload).then(function (d) {
 				if (d.mode === 'upi') { return showUpi(d); }
-				if (d.mode === 'demo') {
-					busy(false);
-					say(t.demoAsk);
-					btn.textContent = t.demoBtn;
-					btn.onclick = function (ev) {
-						ev.preventDefault();
-						btn.onclick = null;
-						busy(true);
-						post('demo-confirm', { donation_id: d.donation_id, token: d.token }).then(function () {
-							busy(false);
-							say(t.demoThanks);
-							form.reset();
-						}).catch(function (err) { busy(false); say(err.message, true); });
-					};
-					return;
-				}
 				var rz = new window.Razorpay({
 					key: d.key_id,
 					amount: d.amount,
