@@ -5,8 +5,7 @@
 .npd-chip{display:inline-block;margin:0 .5rem .5rem 0}
 .npd-chip input{position:absolute;opacity:0;pointer-events:none}
 .npd-chip span{display:inline-block;min-width:4rem;text-align:center;padding:.6rem .9rem;border:2px solid currentColor;border-radius:999px;cursor:pointer}
-.npd-chip input:checked+span{background:currentColor}
-.npd-chip input:checked+span{color:inherit;box-shadow:inset 0 0 0 999px rgba(0,0,0,.12)}
+.npd-chip input:checked+span{background:var(--npd-accent,#1a1a1a);color:#fff;border-color:var(--npd-accent,#1a1a1a)}
 .npd-chip input:focus-visible+span{outline:3px solid #2563eb;outline-offset:2px}
 .npd-hp{position:absolute;left:-9999px;height:0;overflow:hidden}
 .npd-submit{min-height:2.75rem;width:100%;font-size:1.05rem}
