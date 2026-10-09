@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class NPD_DB {
 
-	const DB_VERSION = '3';
+	const DB_VERSION = '4';
 
 	/**
 	 * Table name helper.
@@ -45,6 +45,7 @@ class NPD_DB {
 			email varchar(190) NOT NULL DEFAULT '',
 			phone varchar(40) NOT NULL DEFAULT '',
 			pan_enc text NULL,
+			address text NULL,
 			consent tinyint(1) NOT NULL DEFAULT 0,
 			consent_at datetime NULL,
 			created_at datetime NOT NULL,
@@ -66,6 +67,9 @@ class NPD_DB {
 			rz_payment_id varchar(64) NOT NULL DEFAULT '',
 			campaign varchar(120) NOT NULL DEFAULT '',
 			want_80g tinyint(1) NOT NULL DEFAULT 0,
+			receipt_no varchar(40) NOT NULL DEFAULT '',
+			pre_arn varchar(40) NOT NULL DEFAULT '',
+			receipt_sent_at datetime NULL,
 			fy varchar(9) NOT NULL DEFAULT '',
 			created_at datetime NOT NULL,
 			paid_at datetime NULL,
@@ -127,6 +131,7 @@ class NPD_DB {
 				'email'      => $d['email'],
 				'phone'      => $d['phone'],
 				'pan_enc'    => isset( $d['pan_enc'] ) ? $d['pan_enc'] : null,
+				'address'    => isset( $d['address'] ) ? $d['address'] : '',
 				'consent'    => 1,
 				'consent_at' => $now,
 				'created_at' => $now,
@@ -218,6 +223,9 @@ class NPD_DB {
 				$id
 			)
 		);
+		if ( $changed ) {
+			do_action( 'npd_donation_paid', $id );
+		}
 		return (bool) $changed;
 	}
 
@@ -259,7 +267,11 @@ class NPD_DB {
 		global $wpdb;
 		$t = self::table( 'donations' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		return (bool) $wpdb->query( $wpdb->prepare( "UPDATE {$t} SET status = 'paid', paid_at = %s WHERE id = %d AND status = 'pending' AND mode = 'upi'", current_time( 'mysql' ), $id ) );
+		$ok = (bool) $wpdb->query( $wpdb->prepare( "UPDATE {$t} SET status = 'paid', paid_at = %s WHERE id = %d AND status = 'pending' AND mode = 'upi'", current_time( 'mysql' ), $id ) );
+		if ( $ok ) {
+			do_action( 'npd_donation_paid', $id );
+		}
+		return $ok;
 	}
 
 	/**
