@@ -24,6 +24,7 @@
 		var other = form.querySelector('.npd-other');
 		var want = form.querySelector('[name=want_80g]');
 		var panRow = form.querySelector('.npd-pan');
+		var addrRow = form.querySelector('.npd-addr');
 
 		function say(text, isError) {
 			msg.textContent = text || '';
@@ -43,7 +44,7 @@
 			r.addEventListener('change', function () { other.hidden = (r.value !== 'other' || !r.checked); });
 		});
 		if (want && panRow) {
-			want.addEventListener('change', function () { panRow.hidden = !want.checked; });
+			want.addEventListener('change', function () { panRow.hidden = !want.checked; if (addrRow) { addrRow.hidden = !want.checked; } });
 		}
 
 		function showUpi(d) {
@@ -111,7 +112,8 @@
 				ts: form.ts.value,
 				campaign: wrap.getAttribute('data-campaign') || '',
 				want_80g: want && want.checked ? 1 : 0,
-				pan: form.pan ? form.pan.value : ''
+				pan: form.pan ? form.pan.value : '',
+				address: form.address ? form.address.value : ''
 			};
 			busy(true);
 			post('donate', payload).then(function (d) {
