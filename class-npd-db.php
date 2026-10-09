@@ -59,7 +59,7 @@ class NPD_DB {
 			amount_paise bigint(20) unsigned NOT NULL DEFAULT 0,
 			currency varchar(8) NOT NULL DEFAULT 'INR',
 			status varchar(20) NOT NULL DEFAULT 'created',
-			mode varchar(20) NOT NULL DEFAULT 'demo',
+			mode varchar(20) NOT NULL DEFAULT 'upi',
 			utr varchar(40) NOT NULL DEFAULT '',
 			donor_claimed tinyint(1) NOT NULL DEFAULT 0,
 			rz_order_id varchar(64) NOT NULL DEFAULT '',
@@ -203,7 +203,7 @@ class NPD_DB {
 	 * Mark a donation paid. Safe to call twice: only the first call changes state.
 	 *
 	 * @param int    $id         Donation id.
-	 * @param string $payment_id Razorpay payment id (empty in demo mode).
+	 * @param string $payment_id Razorpay payment id (empty).
 	 * @return bool True when this call changed the state.
 	 */
 	public static function mark_paid( $id, $payment_id = '' ) {
