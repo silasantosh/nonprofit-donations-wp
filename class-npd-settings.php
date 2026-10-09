@@ -23,8 +23,9 @@ class NPD_Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'mode'                => 'upi', // upi | demo | test | live.
+			'mode'                => 'upi', // upi | test | live.
 			'org_name'            => '',
+			'notify_email'        => '',
 			'upi_vpa'             => '',
 			'upi_name'            => '',
 			'key_id'              => '',
@@ -43,7 +44,11 @@ class NPD_Settings {
 	 */
 	public static function all() {
 		$saved = get_option( self::OPTION, array() );
-		return wp_parse_args( is_array( $saved ) ? $saved : array(), self::defaults() );
+		$all   = wp_parse_args( is_array( $saved ) ? $saved : array(), self::defaults() );
+		if ( ! in_array( $all['mode'], array( 'upi', 'test', 'live' ), true ) ) {
+			$all['mode'] = 'upi';
+		}
+		return $all;
 	}
 
 	/**
@@ -113,7 +118,7 @@ class NPD_Settings {
 	}
 
 	/**
-	 * Razorpay credentials in use for the current mode, or null in demo mode.
+	 * Razorpay credentials in use for the current mode, or null when not in test or live mode.
 	 *
 	 * @return array|null
 	 */
@@ -141,6 +146,11 @@ class NPD_Settings {
 	public static function upi() {
 		$s = self::all();
 		if ( 'upi' !== $s['mode'] || ! self::valid_vpa( $s['upi_vpa'] ) ) {
+			return null;
+		}
+		// Live sites take no UPI payment until the ID is verified (name matched) and unchanged.
+		$rec = NPD_Reg::all();
+		if ( 'verified' !== NPD_Reg::status( $rec['upi'] ) || $rec['upi']['number'] !== $s['upi_vpa'] ) {
 			return null;
 		}
 		return array(
