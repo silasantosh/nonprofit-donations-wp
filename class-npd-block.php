@@ -60,20 +60,22 @@ class NPD_Block {
 	 */
 	public static function render( $atts ) {
 		$s       = NPD_Settings::all();
-		if ( 'upi' === NPD_Settings::get( 'mode' ) && ! NPD_Settings::upi() ) {
+		if ( ! NPD_Settings::upi() && ! NPD_Settings::razorpay() ) {
 			if ( current_user_can( 'manage_options' ) ) {
-				return '<p class="npd-demo-note">' . esc_html__( 'Donate form: add your UPI ID in Donations > Settings to start receiving gifts. Visitors do not see the form until then.', 'nonprofit-donations' ) . ' <a href="' . esc_url( admin_url( 'admin.php?page=npd-settings' ) ) . '">' . esc_html__( 'Open settings', 'nonprofit-donations' ) . '</a></p>';
+				return '<p class="npd-demo-note">' . esc_html__( 'Donate form: add your UPI ID in Donations > Settings, then submit it in Donations > Registrations. The form opens to visitors after the UPI ID is verified.', 'nonprofit-donations' ) . ' <a href="' . esc_url( admin_url( 'admin.php?page=npd-settings' ) ) . '">' . esc_html__( 'Open settings', 'nonprofit-donations' ) . '</a></p>';
 			}
 			return '';
 		}
 		$is_upi  = (bool) NPD_Settings::upi();
-		$is_demo = ( ! $is_upi && ! NPD_Settings::razorpay() );
+		if ( ! $is_upi && ! NPD_Settings::razorpay() ) {
+			return '';
+		}
 		$heading = ! empty( $atts['heading'] ) ? $atts['heading'] : __( 'Make a donation', 'nonprofit-donations' );
 		$camp    = ! empty( $atts['campaign'] ) ? $atts['campaign'] : '';
 
 		wp_enqueue_style( 'npd-donate', NPD_URL . 'donate.css', array(), NPD_VERSION );
-		if ( ! $is_demo && ! $is_upi ) {
-			// Razorpay Checkout must load from Razorpay. Only loaded on pages with the form and in non-demo mode.
+		if ( ! $is_upi ) {
+			// Razorpay Checkout must load from Razorpay. Only loaded on pages with the form.
 			wp_enqueue_script( 'npd-razorpay', 'https://checkout.razorpay.com/v1/checkout.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		}
 		if ( $is_upi ) {
@@ -85,15 +87,11 @@ class NPD_Block {
 			'NPD',
 			array(
 				'api'   => esc_url_raw( rest_url( NPD_REST::NS . '/' ) ),
-				'demo'  => $is_demo ? 1 : 0,
-				'upi'   => $is_upi ? 1 : 0,
+								'upi'   => $is_upi ? 1 : 0,
 				'i18n'  => array(
 					'working'   => __( 'Please wait...', 'nonprofit-donations' ),
 					'donate'    => __( 'Donate', 'nonprofit-donations' ),
 					'thanks'    => __( 'Thank you. Your donation was received.', 'nonprofit-donations' ),
-					'demoThanks' => __( 'Demo donation recorded. No real money was charged.', 'nonprofit-donations' ),
-					'demoAsk'   => __( 'Demo mode: no real money moves. Tap to complete this practice donation.', 'nonprofit-donations' ),
-					'demoBtn'   => __( 'Complete demo donation', 'nonprofit-donations' ),
 					'error'     => __( 'Something went wrong. Please try again.', 'nonprofit-donations' ),
 					'upiPay'    => __( 'Pay with your UPI app', 'nonprofit-donations' ),
 					'upiScan'   => __( 'On a computer? Scan this QR code with any UPI app.', 'nonprofit-donations' ),
@@ -111,9 +109,28 @@ class NPD_Block {
 		?>
 		<div class="npd-wrap" data-campaign="<?php echo esc_attr( $camp ); ?>">
 			<form class="npd-form" novalidate>
+				<?php
+				$reg = NPD_Reg::public_list();
+				if ( $reg ) :
+					$bits = array();
+					if ( isset( $reg['12a'] ) ) {
+						$bits[] = '12A: ' . $reg['12a'];
+					}
+					if ( isset( $reg['80g'] ) ) {
+						$bits[] = '80G: ' . $reg['80g'];
+					}
+					?>
+					<p class="npd-reg"><?php echo esc_html( implode( ' | ', $bits ) ); ?> - <?php echo esc_html__( 'Checked against the official record', 'nonprofit-donations' ); ?> <a href="https://incometaxindia.gov.in/Pages/utilities/exempted-institutions.aspx" rel="noopener"><?php echo esc_html__( 'Verify yourself', 'nonprofit-donations' ); ?></a></p>
+				<?php endif; ?>
 				<h3 class="npd-title"><?php echo esc_html( $heading ); ?></h3>
-				<?php if ( $is_demo ) : ?>
-					<p class="npd-demo-note"><?php echo esc_html__( 'Demo mode. Practice donations only, no real money.', 'nonprofit-donations' ); ?></p>
+				<?php if ( $is_upi ) : ?>
+					<p class="npd-upi-note">
+						<?php
+						$who = NPD_Settings::get( 'org_name' );
+						/* translators: %s: organisation name */
+						echo esc_html( sprintf( __( 'Your UPI app should show %s when you pay. If it shows a person\'s name, do not pay.', 'nonprofit-donations' ), '' !== $who ? $who : __( 'the organisation name', 'nonprofit-donations' ) ) );
+						?>
+					</p>
 				<?php endif; ?>
 				<fieldset class="npd-amounts">
 					<legend><?php echo esc_html__( 'Amount (Rs)', 'nonprofit-donations' ); ?></legend>
