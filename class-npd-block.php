@@ -152,6 +152,7 @@ class NPD_Block {
 				<?php if ( ! empty( $s['is_80g'] ) ) : ?>
 					<p class="npd-check"><label><input type="checkbox" name="want_80g" value="1"> <?php echo esc_html__( 'I want an 80G tax receipt', 'nonprofit-donations' ); ?></label></p>
 					<p class="npd-pan" hidden><label><?php echo esc_html__( 'PAN (needed for 80G receipt)', 'nonprofit-donations' ); ?><input type="text" name="pan" maxlength="10" autocapitalize="characters" placeholder="ABCDE1234F"></label></p>
+					<p class="npd-addr" hidden><label><?php echo esc_html__( 'Address (needed for 80G receipt)', 'nonprofit-donations' ); ?><textarea name="address" rows="2" maxlength="400"></textarea></label></p>
 				<?php endif; ?>
 				<p class="npd-hp" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>
 				<p class="npd-check"><label><input type="checkbox" name="consent" value="1" required>
