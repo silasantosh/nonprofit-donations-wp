@@ -15,7 +15,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/nonprofit-donations.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/nonprofit-donations.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/nonprofit-donations.php?v=7"
    }
   },
   {
@@ -23,7 +23,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/uninstall.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/uninstall.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/uninstall.php?v=7"
    }
   },
   {
@@ -31,7 +31,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/readme.txt",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/readme.txt?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/readme.txt?v=7"
    }
   },
   {
@@ -39,7 +39,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-admin.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-admin.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-admin.php?v=7"
    }
   },
   {
@@ -47,7 +47,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-block.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-block.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-block.php?v=7"
    }
   },
   {
@@ -55,7 +55,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-db.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-db.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-db.php?v=7"
    }
   },
   {
@@ -63,7 +63,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-razorpay.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-razorpay.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-razorpay.php?v=7"
    }
   },
   {
@@ -71,7 +71,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-reg.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-reg.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-reg.php?v=7"
    }
   },
   {
@@ -79,7 +79,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-rest.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-rest.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-rest.php?v=7"
    }
   },
   {
@@ -87,7 +87,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-settings.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-settings.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-settings.php?v=7"
    }
   },
   {
@@ -95,7 +95,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/donate.css",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/donate.css?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/donate.css?v=7"
    }
   },
   {
@@ -103,7 +103,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/donate.js",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/donate.js?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/donate.js?v=7"
    }
   },
   {
@@ -111,7 +111,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/qrcode.js",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/qrcode.js?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/qrcode.js?v=7"
    }
   },
   {
@@ -119,7 +119,7 @@
    "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-receipt.php",
    "data": {
     "resource": "url",
-    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-receipt.php?v=6"
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-receipt.php?v=7"
    }
   },
   {
