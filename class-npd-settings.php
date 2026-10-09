@@ -32,6 +32,12 @@ class NPD_Settings {
 			'key_secret_enc'      => '',
 			'webhook_secret_enc'  => '',
 			'is_80g'              => 0,
+			'org_address'         => '',
+			'pre_arns'            => '',
+			'f113_id_code'        => 'PAN',
+			'f113_section'        => '',
+			'f113_type'           => '',
+			'f113_mode'           => '',
 			'amounts'             => '500,1000,2500',
 			'delete_on_uninstall' => 0,
 		);
