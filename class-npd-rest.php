@@ -1,6 +1,6 @@
 <?php
 /**
- * REST routes: donate, confirm, demo-confirm, webhook.
+ * REST routes: donate, confirm, webhook.
  *
  * @package Nonprofit_Donations
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Public donation endpoints. Payment is marked paid only after a signature check
- * or a verified webhook (or in clearly labelled demo mode).
+ * or a verified webhook.
  */
 class NPD_REST {
 
@@ -55,15 +55,6 @@ class NPD_REST {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( __CLASS__, 'confirm' ),
-				'permission_callback' => '__return_true',
-			)
-		);
-		register_rest_route(
-			self::NS,
-			'/demo-confirm',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( __CLASS__, 'demo_confirm' ),
 				'permission_callback' => '__return_true',
 			)
 		);
@@ -139,7 +130,10 @@ class NPD_REST {
 
 		$creds    = NPD_Settings::razorpay();
 		$upi      = NPD_Settings::upi();
-		$mode     = $upi ? 'upi' : ( $creds ? NPD_Settings::get( 'mode' ) : 'demo' );
+		if ( ! $upi && ! $creds ) {
+			return new WP_Error( 'npd_unverified', __( 'Donations are not open yet.', 'nonprofit-donations' ), array( 'status' => 503 ) );
+		}
+		$mode     = $upi ? 'upi' : NPD_Settings::get( 'mode' );
 		$donor_id = NPD_DB::add_donor(
 			array(
 				'name'    => $name,
@@ -190,15 +184,7 @@ class NPD_REST {
 		}
 
 		if ( ! $creds ) {
-			$token = wp_generate_password( 24, false );
-			set_transient( 'npd_demo_' . $don_id, $token, HOUR_IN_SECONDS );
-			return rest_ensure_response(
-				array(
-					'mode'        => 'demo',
-					'donation_id' => $don_id,
-					'token'       => $token,
-				)
-			);
+			return new WP_Error( 'npd_unverified', __( 'Donations are not open yet.', 'nonprofit-donations' ), array( 'status' => 503 ) );
 		}
 
 		$order = NPD_Razorpay::create_order( $creds, $rupees * 100, $don_id );
@@ -278,27 +264,6 @@ class NPD_REST {
 			return new WP_Error( 'npd_sig', __( 'Payment could not be verified.', 'nonprofit-donations' ), array( 'status' => 400 ) );
 		}
 		NPD_DB::mark_paid( (int) $don->id, $pid );
-		return rest_ensure_response( array( 'ok' => true ) );
-	}
-
-	/**
-	 * Complete a demo donation. Only works in demo mode, with the token issued by donate().
-	 *
-	 * @param WP_REST_Request $req Request.
-	 * @return WP_REST_Response|WP_Error
-	 */
-	public static function demo_confirm( WP_REST_Request $req ) {
-		if ( NPD_Settings::razorpay() ) {
-			return new WP_Error( 'npd_mode', __( 'Demo payments are off.', 'nonprofit-donations' ), array( 'status' => 400 ) );
-		}
-		$id    = absint( $req->get_param( 'donation_id' ) );
-		$token = (string) $req->get_param( 'token' );
-		$known = get_transient( 'npd_demo_' . $id );
-		if ( ! $known || ! hash_equals( (string) $known, $token ) ) {
-			return new WP_Error( 'npd_token', __( 'This demo payment has expired.', 'nonprofit-donations' ), array( 'status' => 400 ) );
-		}
-		delete_transient( 'npd_demo_' . $id );
-		NPD_DB::mark_paid( $id, '' );
 		return rest_ensure_response( array( 'ok' => true ) );
 	}
 
