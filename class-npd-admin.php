@@ -332,6 +332,16 @@ class NPD_Admin {
 					<tr><th><label for="npd_wh"><?php echo esc_html__( 'Webhook secret', 'nonprofit-donations' ); ?></label></th><td><input id="npd_wh" type="password" class="regular-text" name="webhook_secret" value="" autocomplete="new-password" placeholder="<?php echo esc_attr( $s['webhook_secret_enc'] ? __( 'Saved (leave blank to keep)', 'nonprofit-donations' ) : '' ); ?>">
 						<p class="description"><?php echo esc_html__( 'Webhook URL to add in Razorpay (events payment.captured and order.paid):', 'nonprofit-donations' ); ?> <code><?php echo esc_html( rest_url( NPD_REST::NS . '/webhook' ) ); ?></code></p></td></tr>
 				</table></details>
+				<h2><?php echo esc_html__( '80G receipts and filing', 'nonprofit-donations' ); ?></h2>
+				<table class="form-table" role="presentation">
+					<tr><th><label for="npd_oa"><?php echo esc_html__( 'Organisation address (on receipts)', 'nonprofit-donations' ); ?></label></th><td><textarea id="npd_oa" class="large-text" rows="3" name="org_address"><?php echo esc_textarea( $s['org_address'] ); ?></textarea></td></tr>
+					<tr><th><label for="npd_pa"><?php echo esc_html__( 'Pre-ARN numbers (unused)', 'nonprofit-donations' ); ?></label></th><td><textarea id="npd_pa" class="large-text code" rows="4" name="pre_arns"><?php echo esc_textarea( $s['pre_arns'] ); ?></textarea>
+						<p class="description"><?php echo esc_html__( 'Paste the Pre-ARNs you generated on the income tax portal, one per line. Each receipt uses the next one. Empty is fine: receipts then go without one.', 'nonprofit-donations' ); ?></p></td></tr>
+					<tr><th><?php echo esc_html__( 'Filing sheet defaults', 'nonprofit-donations' ); ?></th><td>
+						<input name="f113_id_code" placeholder="ID Code" value="<?php echo esc_attr( $s['f113_id_code'] ); ?>"> <input name="f113_section" placeholder="Section Code" value="<?php echo esc_attr( $s['f113_section'] ); ?>"> <input name="f113_type" placeholder="Donation Type" value="<?php echo esc_attr( $s['f113_type'] ); ?>"> <input name="f113_mode" placeholder="Mode of receipt" value="<?php echo esc_attr( $s['f113_mode'] ); ?>">
+						<p class="description"><?php echo esc_html__( 'Type the exact dropdown values from the portal template. We do not guess them. Check the sheet against the portal template before you upload.', 'nonprofit-donations' ); ?></p>
+						<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=npd_export113&fy=' . rawurlencode( NPD_DB::fy_for( current_time( 'mysql' ) ) ) ), 'npd_export113' ) ); ?>"><?php echo esc_html__( 'Download filing sheet (this financial year)', 'nonprofit-donations' ); ?></a></p></td></tr>
+				</table>
 				<?php submit_button(); ?>
 			</form>
 		</div>
@@ -356,6 +366,12 @@ class NPD_Admin {
 			'upi_name'            => isset( $_POST['upi_name'] ) ? sanitize_text_field( wp_unslash( $_POST['upi_name'] ) ) : '',
 			'key_id'              => isset( $_POST['key_id'] ) ? sanitize_text_field( wp_unslash( $_POST['key_id'] ) ) : '',
 			'is_80g'              => empty( $_POST['is_80g'] ) ? 0 : 1,
+			'org_address'         => isset( $_POST['org_address'] ) ? sanitize_textarea_field( wp_unslash( $_POST['org_address'] ) ) : '',
+			'pre_arns'            => isset( $_POST['pre_arns'] ) ? preg_replace( '/[^A-Za-z0-9\-_\/\n]/', '', str_replace( array( ' ', ',', "\r" ), "\n", sanitize_textarea_field( wp_unslash( $_POST['pre_arns'] ) ) ) ) : '',
+			'f113_id_code'        => isset( $_POST['f113_id_code'] ) ? sanitize_text_field( wp_unslash( $_POST['f113_id_code'] ) ) : '',
+			'f113_section'        => isset( $_POST['f113_section'] ) ? sanitize_text_field( wp_unslash( $_POST['f113_section'] ) ) : '',
+			'f113_type'           => isset( $_POST['f113_type'] ) ? sanitize_text_field( wp_unslash( $_POST['f113_type'] ) ) : '',
+			'f113_mode'           => isset( $_POST['f113_mode'] ) ? sanitize_text_field( wp_unslash( $_POST['f113_mode'] ) ) : '',
 			'amounts'             => isset( $_POST['amounts'] ) ? preg_replace( '/[^0-9,]/', '', sanitize_text_field( wp_unslash( $_POST['amounts'] ) ) ) : '500,1000,2500',
 			'delete_on_uninstall' => empty( $_POST['delete_on_uninstall'] ) ? 0 : 1,
 		);
