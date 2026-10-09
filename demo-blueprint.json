@@ -1,0 +1,126 @@
+{
+ "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+ "landingPage": "/donate/",
+ "preferredVersions": {
+  "php": "8.2",
+  "wp": "latest"
+ },
+ "steps": [
+  {
+   "step": "mkdir",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations"
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/nonprofit-donations.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/nonprofit-donations.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/uninstall.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/uninstall.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/readme.txt",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/readme.txt"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-admin.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-admin.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-block.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-block.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-db.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-db.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-razorpay.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-razorpay.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-reg.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-reg.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-rest.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-rest.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/class-npd-settings.php",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/class-npd-settings.php"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/donate.css",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/donate.css"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/donate.js",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/donate.js"
+   }
+  },
+  {
+   "step": "writeFile",
+   "path": "/wordpress/wp-content/plugins/nonprofit-donations/qrcode.js",
+   "data": {
+    "resource": "url",
+    "url": "https://raw.githubusercontent.com/silasantosh/nonprofit-donations-wp/main/qrcode.js"
+   }
+  },
+  {
+   "step": "activatePlugin",
+   "pluginPath": "nonprofit-donations/nonprofit-donations.php"
+  },
+  {
+   "step": "runPHP",
+   "code": "<?php require '/wordpress/wp-load.php'; update_option('npd_settings',array('mode'=>'upi','org_name'=>'Demo Foundation','upi_vpa'=>'demofoundation@okhdfcbank','is_80g'=>1,'notify_email'=>'demo@example.com')); $r=NPD_Reg::all(); $r['upi']=array_merge($r['upi'],array('status'=>'verified','number'=>'demofoundation@okhdfcbank')); update_option(NPD_Reg::OPTION,$r); wp_insert_post(array('post_title'=>'Donate','post_name'=>'donate','post_status'=>'publish','post_type'=>'page','post_content'=>'<!-- wp:nonprofit-donations/donate /-->'));"
+  }
+ ]
+}
