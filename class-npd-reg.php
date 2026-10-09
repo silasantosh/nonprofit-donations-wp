@@ -25,7 +25,7 @@ class NPD_Reg {
 	 * Hook in.
 	 */
 	public static function init() {
-		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
+		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 20 );
 		add_action( 'admin_post_npd_reg_submit', array( __CLASS__, 'submit' ) );
 		add_action( 'admin_post_npd_reg_decide', array( __CLASS__, 'decide' ) );
 		add_action( 'npd_reg_daily', array( __CLASS__, 'daily' ) );
