@@ -30,6 +30,7 @@ require_once NPD_DIR . 'class-npd-rest.php';
 require_once NPD_DIR . 'class-npd-block.php';
 require_once NPD_DIR . 'class-npd-admin.php';
 require_once NPD_DIR . 'class-npd-reg.php';
+require_once NPD_DIR . 'class-npd-receipt.php';
 
 register_activation_hook( __FILE__, array( 'NPD_DB', 'install' ) );
 
@@ -40,6 +41,7 @@ add_action(
 		NPD_REST::init();
 		NPD_Block::init();
 		NPD_Reg::init();
+		NPD_Receipt::init();
 		if ( is_admin() ) {
 			NPD_Admin::init();
 		}
