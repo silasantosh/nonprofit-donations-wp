@@ -41,7 +41,11 @@
 		}
 
 		form.querySelectorAll('[name=amount_choice]').forEach(function (r) {
-			r.addEventListener('change', function () { other.hidden = (r.value !== 'other' || !r.checked); });
+			r.addEventListener('change', function () {
+				var wrapO = other.closest('.npd-other-wrap') || other;
+				wrapO.hidden = (r.value !== 'other' || !r.checked);
+				if (!wrapO.hidden) { other.focus(); if (other.scrollIntoView) { other.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }
+			});
 		});
 		if (want && panRow) {
 			want.addEventListener('change', function () { panRow.hidden = !want.checked; if (addrRow) { addrRow.hidden = !want.checked; } });
@@ -53,16 +57,39 @@
 			var box = document.createElement('div');
 			box.className = 'npd-upi';
 			var h = document.createElement('p');
-			h.textContent = t.upiVpa + ' ' + d.vpa + ' - Rs ' + d.amount;
-			var a = document.createElement('a');
-			a.className = 'wp-element-button npd-submit npd-upi-btn';
-			a.href = d.upi_link;
-			a.textContent = t.upiPay;
+			h.textContent = d.vpa ? t.upiVpa + ' ' + d.vpa + ' - Rs ' + d.amount : 'Rs ' + d.amount;
+			var a = document.createElement('div');
+			a.className = 'npd-apps';
+			var ua = navigator.userAgent || '';
+			var isAndroid = /Android/i.test(ua);
+			var isIOS = /iPhone|iPad|iPod/i.test(ua);
+			var q = d.upi_link.indexOf('?') > -1 ? d.upi_link.slice(d.upi_link.indexOf('?') + 1) : '';
+			function appLink(app) {
+				if (isAndroid) {
+					var pkg = { gpay: 'com.google.android.apps.nbu.paisa.user', phonepe: 'com.phonepe.app', paytm: 'net.one97.paytm', bhim: 'in.org.npci.upiapp' }[app];
+					return 'intent://pay?' + q + '#Intent;scheme=upi;' + (pkg ? 'package=' + pkg + ';' : '') + 'end';
+				}
+				if (isIOS) {
+					var sc = { gpay: 'gpay://upi/pay?', phonepe: 'phonepe://pay?', paytm: 'paytmmp://pay?', bhim: 'upi://pay?' }[app];
+					return sc ? sc + q : d.upi_link;
+				}
+				return d.upi_link;
+			}
+			var apps = [['gpay', 'Google Pay'], ['phonepe', 'PhonePe'], ['paytm', 'Paytm'], ['bhim', 'BHIM'], ['any', t.upiAny || 'Any UPI app']];
+			if (!d.vpa) { apps = []; }
+			apps.forEach(function (x) {
+				var b = document.createElement('a');
+				b.className = 'npd-app npd-app-' + x[0];
+				b.href = appLink(x[0]);
+				b.textContent = x[1];
+				a.appendChild(b);
+			});
 			var qrNote = document.createElement('p');
 			qrNote.textContent = t.upiScan;
 			var qrBox = document.createElement('div');
 			qrBox.className = 'npd-qr';
-			if (window.qrcode) {
+			if (!d.vpa) { qrNote.hidden = true; }
+			if (window.qrcode && d.vpa) {
 				var q = window.qrcode(0, 'M');
 				q.addData(d.upi_link);
 				q.make();
@@ -95,9 +122,72 @@
 					out.className = 'npd-msg is-error';
 				});
 			});
-			[h, a, qrNote, qrBox, lab, go, out].forEach(function (n) { box.appendChild(n); });
+			var shotHost = document.createElement('div');
+			var bankBox = document.createElement('div');
+			if (d.bank) {
+				bankBox.className = 'npd-bank';
+				bankBox.style.cssText = 'margin:14px 0;padding:12px;border:1px solid #bbb;border-radius:8px';
+				var bh = document.createElement('p');
+				bh.innerHTML = '<strong></strong>';
+				bh.firstChild.textContent = t.bankHead;
+				bankBox.appendChild(bh);
+				[[t.bankName, d.bank.name], [t.bankNo, d.bank.no], ['IFSC', d.bank.ifsc], [t.bankBank, (d.bank.bank + ' ' + d.bank.branch).trim()], [t.bankRemark, d.ref]].forEach(function (r) {
+					if (!r[1]) { return; }
+					var row = document.createElement('p');
+					row.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0';
+					var l = document.createElement('span');
+					l.textContent = r[0] + ': ';
+					var v = document.createElement('strong');
+					v.textContent = r[1];
+					var cp = document.createElement('button');
+					cp.type = 'button';
+					cp.textContent = t.bankCopy;
+					cp.addEventListener('click', function () {
+						if (navigator.clipboard) { navigator.clipboard.writeText(r[1]); }
+						cp.textContent = t.bankCopied;
+					});
+					row.appendChild(l); row.appendChild(v); row.appendChild(cp);
+					bankBox.appendChild(row);
+				});
+				var bhelp = document.createElement('small');
+				bhelp.textContent = t.bankHelp;
+				bankBox.appendChild(bhelp);
+			}
+			[h, a, qrNote, qrBox, bankBox, shotHost, lab, go, out].forEach(function (n) { box.appendChild(n); });
+			if (NPD.shot) {
+				var ss = document.createElement('script');
+				ss.src = NPD.shot.base + 'npd-shot.js';
+				ss.onload = function () { window.npdShot.attach({ input: inp, host: shotHost, rupees: parseFloat(d.amount), base: NPD.shot.base, t: NPD.shot.t }); };
+				document.head.appendChild(ss);
+			}
 			wrap.appendChild(box);
 		}
+
+		var stIn = form.state, stList = document.getElementById('npd-states');
+		var cityIn = form.city, cityList = document.getElementById('npd-cities'), cityMap = {}, allCities = '';
+		try { cityMap = JSON.parse(cityIn.getAttribute('data-cities') || '{}'); } catch (err) { cityMap = {}; }
+		if (cityList) { allCities = cityList.innerHTML; }
+		function fillCities(st) {
+			if (!cityList) { return; }
+			var list = cityMap[st], h = '', i;
+			if (!list || !list.length) { cityList.innerHTML = allCities; return; }
+			for (i = 0; i < list.length; i++) { h += '<option value="' + list[i].replace(/"/g, '&quot;') + '"></option>'; }
+			cityList.innerHTML = h;
+		}
+		function pinRule() {
+			var abroad = stIn.value === 'Outside India';
+			form.pincode.required = !abroad;
+			if (abroad) { form.pincode.removeAttribute('pattern'); } else { form.pincode.setAttribute('pattern', '[1-9][0-9]{5}'); }
+		}
+		form.pincode.addEventListener('input', function () { form.pincode.value = form.pincode.value.replace(/\D/g, '').slice(0, 6); });
+		function canonState() {
+			var v = stIn.value.trim().toLowerCase(), hit = '', i, o;
+			if (stList) { for (i = 0; i < stList.options.length; i++) { o = stList.options[i].value; if (o.toLowerCase() === v) { hit = o; break; } } }
+			if (hit) { stIn.value = hit; stIn.setCustomValidity(''); fillCities(hit); pinRule(); }
+			else { stIn.setCustomValidity(v ? 'Please pick your state from the list.' : ''); }
+			return hit;
+		}
+		if (stIn && stIn.tagName === 'INPUT') { stIn.addEventListener('input', canonState); stIn.addEventListener('change', function () { if (canonState() && cityIn && !cityIn.value) { cityIn.focus(); } }); stIn.addEventListener('blur', canonState); }
 
 		form.addEventListener('submit', function (e) {
 			e.preventDefault();
@@ -107,6 +197,9 @@
 				name: form.name.value,
 				email: form.email.value,
 				phone: form.phone.value,
+				city: form.city.value,
+				state: form.state.value,
+				pincode: form.pincode.value,
 				consent: form.consent.checked ? 1 : 0,
 				website: form.website.value,
 				ts: form.ts.value,

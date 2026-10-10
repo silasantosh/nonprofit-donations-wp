@@ -30,7 +30,8 @@ class NPD_Admin {
 	public static function menu() {
 		add_menu_page( __( 'Donations', 'nonprofit-donations' ), __( 'Donations', 'nonprofit-donations' ), 'manage_options', 'npd', array( __CLASS__, 'page_donations' ), 'dashicons-heart', 58 );
 		add_submenu_page( 'npd', __( 'Donations', 'nonprofit-donations' ), __( 'Donations', 'nonprofit-donations' ), 'manage_options', 'npd', array( __CLASS__, 'page_donations' ) );
-		add_submenu_page( 'npd', __( 'Verify UPI', 'nonprofit-donations' ), __( 'Verify UPI', 'nonprofit-donations' ), 'manage_options', 'npd-verify', array( __CLASS__, 'page_verify' ) );
+		$bubble = NPD_Alerts::claimed_count();
+		add_submenu_page( 'npd', __( 'Verify UPI', 'nonprofit-donations' ), __( 'Verify UPI', 'nonprofit-donations' ) . ( $bubble ? ' <span class="awaiting-mod">' . (int) $bubble . '</span>' : '' ), 'manage_options', 'npd-verify', array( __CLASS__, 'page_verify' ) );
 		add_submenu_page( 'npd', __( 'Donors', 'nonprofit-donations' ), __( 'Donors', 'nonprofit-donations' ), 'manage_options', 'npd-donors', array( __CLASS__, 'page_donors' ) );
 		add_submenu_page( 'npd', __( 'Settings', 'nonprofit-donations' ), __( 'Settings', 'nonprofit-donations' ), 'manage_options', 'npd-settings', array( __CLASS__, 'page_settings' ) );
 	}
@@ -70,7 +71,7 @@ class NPD_Admin {
 		$fy     = isset( $_GET['fy'] ) ? sanitize_text_field( wp_unslash( $_GET['fy'] ) ) : '';
 		// phpcs:enable
 		return array(
-			'status' => in_array( $status, array( 'created', 'pending', 'paid', 'failed' ), true ) ? $status : '',
+			'status' => in_array( $status, array( 'created', 'pending', 'paid', 'failed', 'cancelled' ), true ) ? $status : '',
 			'fy'     => preg_match( '/^\d{4}-\d{2}$/', $fy ) ? $fy : '',
 		);
 	}
@@ -100,7 +101,7 @@ class NPD_Admin {
 				<input type="hidden" name="page" value="npd">
 				<select name="status">
 					<option value=""><?php echo esc_html__( 'All statuses', 'nonprofit-donations' ); ?></option>
-					<?php foreach ( array( 'paid', 'pending', 'created', 'failed' ) as $s ) : ?>
+					<?php foreach ( array( 'paid', 'pending', 'created', 'failed', 'cancelled' ) as $s ) : ?>
 						<option value="<?php echo esc_attr( $s ); ?>" <?php selected( $f['status'], $s ); ?>><?php echo esc_html( $s ); ?></option>
 					<?php endforeach; ?>
 				</select>
@@ -144,6 +145,7 @@ class NPD_Admin {
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
 		$q     = isset( $_GET['q'] ) ? trim( sanitize_text_field( wp_unslash( $_GET['q'] ) ) ) : '';
 		$only  = isset( $_GET['claimed'] );
+		$bankf = isset( $_GET['bank'] );
 		$done  = isset( $_GET['done'] ) ? absint( $_GET['done'] ) : 0;
 		// phpcs:enable
 		$rows  = NPD_DB::list_donations( array( 'status' => 'pending', 'limit' => 500 ) );
@@ -156,6 +158,9 @@ class NPD_Admin {
 			}
 			$sum += (int) $r->amount_paise;
 			if ( $only && ! $r->donor_claimed ) {
+				continue;
+			}
+			if ( $bankf && '' === (string) $r->bank_match ) {
 				continue;
 			}
 			if ( '' !== $q ) {
@@ -197,6 +202,8 @@ class NPD_Admin {
 				<p>
 					<button class="button button-primary" name="do" value="confirm"><?php echo esc_html__( 'Confirm selected', 'nonprofit-donations' ); ?></button>
 					<button class="button" name="do" value="reject"><?php echo esc_html__( 'Mark selected not received', 'nonprofit-donations' ); ?></button>
+					<button class="button" name="do" value="confirm_bank"><?php echo esc_html__( 'Confirm all bank-matched', 'nonprofit-donations' ); ?></button>
+					<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=npd-bank' ) ); ?>"><?php echo esc_html__( 'Upload bank statement', 'nonprofit-donations' ); ?></a>
 				</p>
 				<table class="widefat striped">
 					<thead><tr>
@@ -213,22 +220,34 @@ class NPD_Admin {
 						?>
 						<tr>
 							<th scope="row" class="check-column"><input class="npd-sel" type="checkbox" name="ids[]" value="<?php echo esc_attr( $r->id ); ?>"></th>
-							<td><strong>DON-<?php echo esc_html( $r->id ); ?></strong></td>
+							<td><strong>DON-<?php echo esc_html( $r->id ); ?></strong><br><button class="button button-primary" style="margin-top:6px" name="one" value="<?php echo esc_attr( $r->id ); ?>:confirm"><?php echo esc_html__( 'Confirm', 'nonprofit-donations' ); ?></button><br><button style="margin-top:4px" class="button" name="one" value="<?php echo esc_attr( $r->id ); ?>:reject"><?php echo esc_html__( 'Not received', 'nonprofit-donations' ); ?></button></td>
 							<td><strong><?php echo esc_html( self::rs( (int) $r->amount_paise ) ); ?></strong></td>
-							<td><?php echo esc_html( $r->donor_name ); ?><br><small><?php echo esc_html( $r->donor_email ); ?><?php echo $r->donor_phone ? ' / ' . esc_html( $r->donor_phone ) : ''; ?></small></td>
+							<td><?php echo esc_html( $r->donor_name ); ?><br><small><?php echo esc_html( $r->donor_email ); ?><?php echo $r->donor_phone ? ' / ' . esc_html( $r->donor_phone ) : ''; ?><?php echo ( $r->donor_city || $r->donor_state ) ? '<br>' . esc_html( trim( $r->donor_city . ', ' . $r->donor_state . ( $r->donor_pincode ? ' ' . $r->donor_pincode : '' ), ', ' ) ) : ''; ?></small></td>
 							<td><?php echo esc_html( $r->created_at ); ?><br><small>
 								<?php
 								/* translators: %s: time span like "2 hours" */
 								echo esc_html( sprintf( __( '%s ago', 'nonprofit-donations' ), human_time_diff( $now - max( 0, $age ), $now ) ) );
 								?>
+								<?php echo $age > NPD_Alerts::STALE_DAYS * DAY_IN_SECONDS ? ' <strong style="color:#b32d2e">' . esc_html__( 'Over 3 days', 'nonprofit-donations' ) . '</strong>' : ''; ?>
 							</small></td>
 							<td><?php echo $r->donor_claimed ? '<span style="color:#15803d">' . esc_html__( 'I have paid', 'nonprofit-donations' ) . '</span>' : '<span style="color:#6b7280">' . esc_html__( 'no action', 'nonprofit-donations' ) . '</span>'; ?></td>
-							<td><code><?php echo esc_html( $r->utr ); ?></code></td>
+							<td><code><?php echo esc_html( $r->utr ); ?></code>
+								<?php if ( '' !== (string) $r->bank_match ) : ?>
+									<br><span style="color:#15803d;font-weight:600"><?php echo esc_html__( 'Bank statement match', 'nonprofit-donations' ); ?></span>
+								<?php endif; ?>
+								<?php if ( 'dup_ref' === $r->review_flag ) : ?>
+									<br><span style="color:#b32d2e;font-weight:600"><?php echo esc_html__( 'Review: this reference was used on another donation', 'nonprofit-donations' ); ?></span>
+								<?php elseif ( 'unclear_ref' === $r->review_flag ) : ?>
+									<br><span style="color:#b32d2e;font-weight:600"><?php echo esc_html__( 'Review: reference unclear', 'nonprofit-donations' ); ?></span>
+								<?php endif; ?>
+							</td>
+
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
 				</table>
 			</form>
+			<?php NPD_Flow::verify_extras(); ?>
 		</div>
 		<?php
 	}
@@ -245,6 +264,21 @@ class NPD_Admin {
 		$do  = isset( $_POST['do'] ) ? sanitize_key( wp_unslash( $_POST['do'] ) ) : '';
 		$ids = isset( $_POST['ids'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['ids'] ) ) : array();
 		// phpcs:enable
+		$one = isset( $_POST['one'] ) ? sanitize_text_field( wp_unslash( $_POST['one'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		if ( preg_match( '/^(\d+):(confirm|reject)$/', $one, $m ) ) {
+			$ids = array( (int) $m[1] );
+			$do  = $m[2];
+		}
+		if ( 'confirm_bank' === $do ) {
+			// Only donations a statement matched, and never ones flagged for review.
+			$ids = array();
+			foreach ( NPD_DB::list_donations( array( 'status' => 'pending', 'limit' => 500 ) ) as $r ) {
+				if ( 'upi' === $r->mode && '' !== (string) $r->bank_match && '' === (string) $r->review_flag ) {
+					$ids[] = (int) $r->id;
+				}
+			}
+			$do = 'confirm';
+		}
 		$n = 0;
 		foreach ( array_unique( $ids ) as $id ) {
 			if ( 'confirm' === $do && NPD_DB::verify_upi( $id ) ) {
@@ -316,6 +350,11 @@ class NPD_Admin {
 					<tr><th><label for="npd_upn"><?php echo esc_html__( 'Name shown in UPI app', 'nonprofit-donations' ); ?></label></th><td><input id="npd_upn" class="regular-text" name="upi_name" value="<?php echo esc_attr( $s['upi_name'] ); ?>"></td></tr>
 					<tr><th><?php echo esc_html__( '80G receipts', 'nonprofit-donations' ); ?></th><td><label><input type="checkbox" name="is_80g" value="1" <?php checked( $s['is_80g'], 1 ); ?>> <?php echo esc_html__( 'We hold 80G registration; offer donors an 80G receipt option (asks for PAN).', 'nonprofit-donations' ); ?></label></td></tr>
 					<tr><th><label for="npd_amt"><?php echo esc_html__( 'Preset amounts (Rs)', 'nonprofit-donations' ); ?></label></th><td><input id="npd_amt" class="regular-text" name="amounts" value="<?php echo esc_attr( $s['amounts'] ); ?>"><p class="description"><?php echo esc_html__( 'Comma separated, like 500,1000,2500.', 'nonprofit-donations' ); ?></p></td></tr>
+					<tr><th><?php echo esc_html__( 'Form colour', 'nonprofit-donations' ); ?></th><td>
+						<label><input type="checkbox" name="use_custom_color" value="1" <?php checked( '' !== $s['accent_color'] ); ?>> <?php echo esc_html__( 'Use my own colour', 'nonprofit-donations' ); ?></label>
+						<input type="color" name="accent_color" value="<?php echo esc_attr( '' !== $s['accent_color'] ? $s['accent_color'] : '#1d4ed8' ); ?>">
+						<p class="description"><?php echo esc_html__( 'Leave the box unticked and the form uses your theme\'s main colour automatically.', 'nonprofit-donations' ); ?></p>
+					</td></tr>
 					<tr><th><?php echo esc_html__( 'On uninstall', 'nonprofit-donations' ); ?></th><td><label><input type="checkbox" name="delete_on_uninstall" value="1" <?php checked( $s['delete_on_uninstall'], 1 ); ?>> <?php echo esc_html__( 'Delete all donation data when the plugin is deleted', 'nonprofit-donations' ); ?></label></td></tr>
 				</table>
 				<details style="margin:1em 0"><summary><strong><?php echo esc_html__( 'Need card payments? (optional)', 'nonprofit-donations' ); ?></strong></summary>
@@ -385,6 +424,7 @@ class NPD_Admin {
 			'f113_type'           => isset( $_POST['f113_type'] ) ? sanitize_text_field( wp_unslash( $_POST['f113_type'] ) ) : '',
 			'f113_mode'           => isset( $_POST['f113_mode'] ) ? sanitize_text_field( wp_unslash( $_POST['f113_mode'] ) ) : '',
 			'amounts'             => isset( $_POST['amounts'] ) ? preg_replace( '/[^0-9,]/', '', sanitize_text_field( wp_unslash( $_POST['amounts'] ) ) ) : '500,1000,2500',
+			'accent_color'        => ( ! empty( $_POST['use_custom_color'] ) && isset( $_POST['accent_color'] ) && preg_match( '/^#[0-9a-fA-F]{6}$/', (string) wp_unslash( $_POST['accent_color'] ) ) ) ? strtolower( (string) wp_unslash( $_POST['accent_color'] ) ) : '',
 			'delete_on_uninstall' => empty( $_POST['delete_on_uninstall'] ) ? 0 : 1,
 		);
 		if ( ! empty( $_POST['key_secret'] ) ) {
@@ -403,7 +443,7 @@ class NPD_Admin {
 	 * CSV export (no PAN, formula-safe).
 	 */
 	public static function export() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'npd_view_reports' ) ) {
 			wp_die( esc_html__( 'Not allowed.', 'nonprofit-donations' ), 403 );
 		}
 		check_admin_referer( 'npd_export' );
@@ -412,7 +452,7 @@ class NPD_Admin {
 		header( 'Content-Type: text/csv; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename="donations-' . gmdate( 'Y-m-d' ) . '.csv"' );
 		$out = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-		fputcsv( $out, array( 'id', 'date', 'name', 'email', 'phone', 'amount_inr', 'status', 'mode', 'utr', 'fy', 'campaign', 'want_80g', 'payment_id' ) );
+		fputcsv( $out, array( 'id', 'date', 'name', 'email', 'phone', 'city', 'state', 'pincode', 'amount_inr', 'status', 'mode', 'utr', 'fy', 'campaign', 'want_80g', 'payment_id' ) );
 		foreach ( $rows as $r ) {
 			fputcsv(
 				$out,
@@ -422,6 +462,9 @@ class NPD_Admin {
 					self::csv_safe( $r->donor_name ),
 					self::csv_safe( $r->donor_email ),
 					self::csv_safe( $r->donor_phone ),
+					self::csv_safe( $r->donor_city ),
+					self::csv_safe( $r->donor_state ),
+					self::csv_safe( $r->donor_pincode ),
 					number_format( $r->amount_paise / 100, 2, '.', '' ),
 					$r->status,
 					$r->mode,

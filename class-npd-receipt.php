@@ -16,7 +16,7 @@ class NPD_Receipt {
 	 * Hooks.
 	 */
 	public static function init() {
-		add_action( 'npd_donation_paid', array( __CLASS__, 'issue' ) );
+		// The 80G receipt is issued by NPD_Flow after its short hold, so a mistaken confirm can be reversed first.
 		add_action( 'admin_post_npd_export113', array( __CLASS__, 'export113' ) );
 		add_action( 'admin_post_npd_resend', array( __CLASS__, 'resend' ) );
 		add_action( 'admin_post_npd_testmail', array( __CLASS__, 'test_mail' ) );
@@ -40,6 +40,15 @@ class NPD_Receipt {
 	 * Is the NGO allowed to issue 80G receipts right now?
 	 *
 	 * @return array|null The verified 80G record, or null.
+	 */
+	public static function can_issue() {
+		return (bool) self::reg80g();
+	}
+
+	/**
+	 * Verified 80G record or null.
+	 *
+	 * @return array|null
 	 */
 	private static function reg80g() {
 		$all = NPD_Reg::all();
@@ -68,6 +77,9 @@ class NPD_Receipt {
 		$reg = self::reg80g();
 		if ( ! $reg ) {
 			return false; // No verified 80G registration, no 80G receipt.
+		}
+		if ( '' === NPD_Settings::decrypt( (string) $row->pan_enc ) ) {
+			return false; // No donor PAN: plain thank-you only, and no Pre-ARN is used up.
 		}
 		$t = NPD_DB::table( 'donations' );
 		if ( '' === $row->receipt_no ) {

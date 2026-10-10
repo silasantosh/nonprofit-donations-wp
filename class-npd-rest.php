@@ -16,7 +16,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 class NPD_REST {
 
 	const NS         = 'nonprofit-donations/v1';
-	const MIN_RUPEES = 10;
+	const MIN_RUPEES = 1;
+
+	/**
+	 * Indian states and union territories.
+	 *
+	 * @return string[]
+	 */
+	/** Suggestions only: any city typed by the donor is accepted. */
+	public static function cities() {
+		return array( 'Mumbai', 'Delhi', 'New Delhi', 'Bengaluru', 'Hyderabad', 'Ahmedabad', 'Chennai', 'Kolkata', 'Pune', 'Jaipur', 'Surat', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Thane', 'Bhopal', 'Visakhapatnam', 'Patna', 'Vadodara', 'Ghaziabad', 'Ludhiana', 'Agra', 'Nashik', 'Faridabad', 'Meerut', 'Rajkot', 'Varanasi', 'Srinagar', 'Aurangabad', 'Dhanbad', 'Amritsar', 'Navi Mumbai', 'Prayagraj', 'Ranchi', 'Howrah', 'Coimbatore', 'Jabalpur', 'Gwalior', 'Vijayawada', 'Jodhpur', 'Madurai', 'Raipur', 'Kota', 'Guwahati', 'Chandigarh', 'Solapur', 'Hubli', 'Mysuru', 'Tiruchirappalli', 'Bareilly', 'Aligarh', 'Tiruppur', 'Gurugram', 'Moradabad', 'Jalandhar', 'Bhubaneswar', 'Salem', 'Warangal', 'Guntur', 'Bhiwandi', 'Saharanpur', 'Gorakhpur', 'Bikaner', 'Amravati', 'Noida', 'Jamshedpur', 'Bhilai', 'Cuttack', 'Firozabad', 'Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur', 'Dehradun', 'Durgapur', 'Asansol', 'Nanded', 'Kolhapur', 'Ajmer', 'Gulbarga', 'Jamnagar', 'Ujjain', 'Loni', 'Siliguri', 'Jhansi', 'Ulhasnagar', 'Nellore', 'Jammu', 'Belagavi', 'Mangaluru', 'Tirunelveli', 'Gaya', 'Udaipur', 'Mathura', 'Bokaro', 'Rourkela', 'Shimla', 'Panaji', 'Puducherry', 'Imphal', 'Shillong', 'Gangtok', 'Itanagar', 'Aizawl', 'Kohima', 'Agartala', 'Port Blair', 'Tirupati', 'Rajahmundry', 'Kakinada', 'Karimnagar', 'Nizamabad', 'Vellore', 'Erode', 'Thanjavur', 'Panipat', 'Karnal', 'Rohtak', 'Hisar', 'Patiala', 'Bathinda', 'Haridwar', 'Roorkee', 'Muzaffarpur', 'Bhagalpur', 'Darbhanga', 'Sambalpur', 'Berhampur', 'Bilaspur', 'Anand', 'Bhavnagar', 'Gandhinagar', 'Sangli', 'Satara', 'Latur', 'Akola', 'Dhule', 'Jalgaon', 'Ratlam', 'Sagar', 'Satna', 'Rewa', 'Alwar', 'Bhilwara', 'Sikar' );
+	}
+
+	/** City suggestions per state (suggestions only). */
+	public static function cities_by_state() {
+		return array( 'Maharashtra' => array( 'Mumbai', 'Pune', 'Nagpur', 'Thane', 'Nashik', 'Navi Mumbai', 'Aurangabad', 'Solapur', 'Bhiwandi', 'Amravati', 'Nanded', 'Kolhapur', 'Ulhasnagar', 'Sangli', 'Satara', 'Latur', 'Akola', 'Dhule', 'Jalgaon', 'Loni' ), 'Delhi' => array( 'Delhi', 'New Delhi' ), 'Karnataka' => array( 'Bengaluru', 'Hubli', 'Mysuru', 'Belagavi', 'Mangaluru', 'Gulbarga' ), 'Telangana' => array( 'Hyderabad', 'Warangal', 'Karimnagar', 'Nizamabad' ), 'Gujarat' => array( 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Jamnagar', 'Bhavnagar', 'Gandhinagar', 'Anand' ), 'Tamil Nadu' => array( 'Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Tiruppur', 'Salem', 'Tirunelveli', 'Vellore', 'Erode', 'Thanjavur' ), 'West Bengal' => array( 'Kolkata', 'Howrah', 'Durgapur', 'Asansol', 'Siliguri' ), 'Rajasthan' => array( 'Jaipur', 'Jodhpur', 'Kota', 'Bikaner', 'Ajmer', 'Udaipur', 'Alwar', 'Bhilwara', 'Sikar' ), 'Uttar Pradesh' => array( 'Lucknow', 'Kanpur', 'Ghaziabad', 'Agra', 'Meerut', 'Varanasi', 'Prayagraj', 'Bareilly', 'Aligarh', 'Moradabad', 'Saharanpur', 'Gorakhpur', 'Noida', 'Firozabad', 'Jhansi', 'Mathura' ), 'Madhya Pradesh' => array( 'Indore', 'Bhopal', 'Jabalpur', 'Gwalior', 'Ujjain', 'Ratlam', 'Sagar', 'Satna', 'Rewa' ), 'Andhra Pradesh' => array( 'Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Tirupati', 'Rajahmundry', 'Kakinada' ), 'Bihar' => array( 'Patna', 'Gaya', 'Muzaffarpur', 'Bhagalpur', 'Darbhanga' ), 'Punjab' => array( 'Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda' ), 'Haryana' => array( 'Faridabad', 'Gurugram', 'Panipat', 'Karnal', 'Rohtak', 'Hisar' ), 'Jharkhand' => array( 'Ranchi', 'Dhanbad', 'Jamshedpur', 'Bokaro' ), 'Odisha' => array( 'Bhubaneswar', 'Cuttack', 'Rourkela', 'Sambalpur', 'Berhampur' ), 'Chhattisgarh' => array( 'Raipur', 'Bhilai', 'Bilaspur' ), 'Assam' => array( 'Guwahati' ), 'Kerala' => array( 'Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur' ), 'Uttarakhand' => array( 'Dehradun', 'Haridwar', 'Roorkee' ), 'Chandigarh' => array( 'Chandigarh' ), 'Jammu and Kashmir' => array( 'Srinagar', 'Jammu' ), 'Himachal Pradesh' => array( 'Shimla' ), 'Goa' => array( 'Panaji' ), 'Puducherry' => array( 'Puducherry' ), 'Manipur' => array( 'Imphal' ), 'Meghalaya' => array( 'Shillong' ), 'Sikkim' => array( 'Gangtok' ), 'Arunachal Pradesh' => array( 'Itanagar' ), 'Mizoram' => array( 'Aizawl' ), 'Nagaland' => array( 'Kohima' ), 'Tripura' => array( 'Agartala' ), 'Andaman and Nicobar Islands' => array( 'Port Blair' ) );
+	}
+
+	public static function states() {
+		return array( 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry', 'Outside India' );
+	}
+
 	const MAX_RUPEES = 1000000;
 
 	/**
@@ -115,6 +135,25 @@ class NPD_REST {
 		if ( '' === $name || ! is_email( $email ) ) {
 			return new WP_Error( 'npd_donor', __( 'Please enter your name and a valid email.', 'nonprofit-donations' ), array( 'status' => 400 ) );
 		}
+		$city  = sanitize_text_field( (string) $req->get_param( 'city' ) );
+		$state = sanitize_text_field( (string) $req->get_param( 'state' ) );
+		foreach ( self::states() as $known ) {
+			if ( 0 === strcasecmp( $state, $known ) ) {
+				$state = $known;
+				break;
+			}
+		}
+		if ( strlen( $city ) < 2 || ! in_array( $state, self::states(), true ) ) {
+			return new WP_Error( 'npd_location', __( 'Please enter your city and choose your state.', 'nonprofit-donations' ), array( 'status' => 400 ) );
+		}
+		$pincode = preg_replace( '/\s+/', '', sanitize_text_field( (string) $req->get_param( 'pincode' ) ) );
+		if ( 'Outside India' === $state ) {
+			$pincode = substr( $pincode, 0, 10 );
+		} elseif ( null === $req->get_param( 'pincode' ) ) {
+			$pincode = ''; // An older cached form that has no pincode field: do not block the donor.
+		} elseif ( ! preg_match( '/^[1-9][0-9]{5}$/', $pincode ) ) {
+			return new WP_Error( 'npd_pincode', __( 'Please enter a valid 6-digit pincode.', 'nonprofit-donations' ), array( 'status' => 400 ) );
+		}
 		if ( ! rest_sanitize_boolean( $req->get_param( 'consent' ) ) ) {
 			return new WP_Error( 'npd_consent', __( 'Please tick the consent box to continue.', 'nonprofit-donations' ), array( 'status' => 400 ) );
 		}
@@ -136,15 +175,25 @@ class NPD_REST {
 
 		$creds    = NPD_Settings::razorpay();
 		$upi      = NPD_Settings::upi();
-		if ( ! $upi && ! $creds ) {
+		$bank     = NPD_Flow::bank();
+		if ( $upi && $bank && 'only' === $bank['mode'] ) {
+			$upi = null; // UPI paused by the owner: bank transfer only.
+		}
+		if ( ! $upi && $bank ) {
+			$creds = null; // Bank-transfer gifts use the same manual lane as UPI gifts.
+		}
+		if ( ! $upi && ! $creds && ! $bank ) {
 			return new WP_Error( 'npd_unverified', __( 'Donations are not open yet.', 'nonprofit-donations' ), array( 'status' => 503 ) );
 		}
-		$mode     = $upi ? 'upi' : NPD_Settings::get( 'mode' );
+		$mode     = ( $upi || $bank ) ? 'upi' : NPD_Settings::get( 'mode' );
 		$donor_id = NPD_DB::add_donor(
 			array(
 				'name'    => $name,
 				'email'   => $email,
 				'phone'   => substr( $phone, 0, 20 ),
+				'city'    => substr( $city, 0, 120 ),
+				'state'   => $state,
+				'pincode' => $pincode,
 				'pan_enc' => $pan_enc,
 				'address' => $address,
 			)
@@ -160,11 +209,11 @@ class NPD_REST {
 			)
 		);
 
-		if ( $upi ) {
+		if ( $upi || $bank ) {
 			$token = wp_generate_password( 24, false );
 			set_transient( 'npd_upi_' . $don_id, $token, DAY_IN_SECONDS );
 			$ref  = 'DON-' . $don_id;
-			$link = 'upi://pay?' . http_build_query(
+			$link = ! $upi ? '' : 'upi://pay?' . http_build_query(
 				array(
 					'pa' => $upi['vpa'],
 					'pn' => $upi['name'],
@@ -183,7 +232,8 @@ class NPD_REST {
 					'donation_id' => $don_id,
 					'token'       => $token,
 					'upi_link'    => $link,
-					'vpa'         => $upi['vpa'],
+					'vpa'         => $upi ? $upi['vpa'] : '',
+					'bank'        => $bank ? array( 'name' => $bank['name'], 'no' => $bank['no'], 'ifsc' => $bank['ifsc'], 'bank' => $bank['bank'], 'branch' => $bank['branch'] ) : null,
 					'ref'         => $ref,
 					'amount'      => $rupees,
 				)
@@ -233,19 +283,22 @@ class NPD_REST {
 		if ( ! $known || ! hash_equals( (string) $known, $token ) ) {
 			return new WP_Error( 'npd_token', __( 'This payment session has expired. Please start again.', 'nonprofit-donations' ), array( 'status' => 400 ) );
 		}
-		$utr = strtoupper( preg_replace( '/\s+/', '', (string) $req->get_param( 'utr' ) ) );
+		$utr  = strtoupper( preg_replace( '/\s+/', '', (string) $req->get_param( 'utr' ) ) );
+		$flag = '';
 		if ( '' !== $utr ) {
+			// A doubtful reference never errors at the donor. It goes to the review queue, and nothing is auto-confirmed.
 			if ( ! preg_match( '/^[A-Z0-9]{8,30}$/', $utr ) ) {
-				return new WP_Error( 'npd_utr', __( 'That reference number does not look right. You can leave it empty.', 'nonprofit-donations' ), array( 'status' => 400 ) );
-			}
-			if ( NPD_DB::utr_taken( $utr, $id ) ) {
-				return new WP_Error( 'npd_utr_dup', __( 'This reference number was already submitted.', 'nonprofit-donations' ), array( 'status' => 409 ) );
+				$utr  = '';
+				$flag = 'unclear_ref';
+			} elseif ( NPD_DB::utr_taken( $utr, $id ) ) {
+				$flag = 'dup_ref';
 			}
 		}
-		if ( ! NPD_DB::submit_utr( $id, $utr ) ) {
+		if ( ! NPD_DB::submit_utr( $id, $utr, $flag ) ) {
 			return new WP_Error( 'npd_state', __( 'This donation was already updated.', 'nonprofit-donations' ), array( 'status' => 409 ) );
 		}
 		delete_transient( 'npd_upi_' . $id );
+		do_action( 'npd_donor_claimed', $id );
 		return rest_ensure_response( array( 'ok' => true ) );
 	}
 

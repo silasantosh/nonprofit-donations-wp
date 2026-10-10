@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name:       Nonprofit Donations
- * Plugin URI:        https://github.com/silasantosh/nonprofit-donations
+ * Plugin URI:        https://github.com/silasantosh/nonprofit-donations-wp
  * Description:       Free donation plugin for Indian nonprofits. Connect your own Razorpay account, record donors, and keep donation records. No WooCommerce needed.
- * Version:           0.1.0
+ * Version:           0.7.4
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Impact Connect
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'NPD_VERSION', '0.1.0' );
+define( 'NPD_VERSION', '0.7.4' );
 define( 'NPD_FILE', __FILE__ );
 define( 'NPD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'NPD_URL', plugin_dir_url( __FILE__ ) );
@@ -31,6 +31,13 @@ require_once NPD_DIR . 'class-npd-block.php';
 require_once NPD_DIR . 'class-npd-admin.php';
 require_once NPD_DIR . 'class-npd-reg.php';
 require_once NPD_DIR . 'class-npd-receipt.php';
+require_once NPD_DIR . 'class-npd-cause.php';
+require_once NPD_DIR . 'class-npd-alerts.php';
+require_once NPD_DIR . 'class-npd-access.php';
+require_once NPD_DIR . 'class-npd-reports.php';
+require_once NPD_DIR . 'class-npd-bank.php';
+require_once NPD_DIR . 'class-npd-mailbox.php';
+require_once NPD_DIR . 'class-npd-flow.php';
 
 register_activation_hook( __FILE__, array( 'NPD_DB', 'install' ) );
 
@@ -42,8 +49,16 @@ add_action(
 		NPD_Block::init();
 		NPD_Reg::init();
 		NPD_Receipt::init();
+		NPD_Cause::init();
+		// Not admin-only: the donor alert fires from the public REST call and the cron jobs run outside wp-admin.
+		NPD_Alerts::init();
+		NPD_Mailbox::init();
+		NPD_Flow::init();
 		if ( is_admin() ) {
 			NPD_Admin::init();
+			NPD_Access::init();
+			NPD_Reports::init();
+			NPD_Bank::init();
 		}
 	}
 );

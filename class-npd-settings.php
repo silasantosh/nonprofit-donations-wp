@@ -39,6 +39,7 @@ class NPD_Settings {
 			'f113_type'           => '',
 			'f113_mode'           => '',
 			'amounts'             => '500,1000,2500',
+			'accent_color'        => '',
 			'delete_on_uninstall' => 0,
 		);
 	}

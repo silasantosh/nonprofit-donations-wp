@@ -9,6 +9,9 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
+wp_clear_scheduled_hook( 'npd_stale_daily' );
+wp_clear_scheduled_hook( 'npd_mail_poll' );
+delete_option( 'npd_mailbox' ); // Mailbox password is always removed.
 $npd_settings = get_option( 'npd_settings', array() );
 if ( ! empty( $npd_settings['delete_on_uninstall'] ) ) {
 	global $wpdb;

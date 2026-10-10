@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class NPD_DB {
 
-	const DB_VERSION = '4';
+	const DB_VERSION = '8';
 
 	/**
 	 * Table name helper.
@@ -44,6 +44,9 @@ class NPD_DB {
 			name varchar(190) NOT NULL DEFAULT '',
 			email varchar(190) NOT NULL DEFAULT '',
 			phone varchar(40) NOT NULL DEFAULT '',
+			city varchar(120) NOT NULL DEFAULT '',
+			state varchar(60) NOT NULL DEFAULT '',
+			pincode varchar(10) NOT NULL DEFAULT '',
 			pan_enc text NULL,
 			address text NULL,
 			consent tinyint(1) NOT NULL DEFAULT 0,
@@ -63,6 +66,11 @@ class NPD_DB {
 			mode varchar(20) NOT NULL DEFAULT 'upi',
 			utr varchar(40) NOT NULL DEFAULT '',
 			donor_claimed tinyint(1) NOT NULL DEFAULT 0,
+			review_flag varchar(20) NOT NULL DEFAULT '',
+			bank_match varchar(60) NOT NULL DEFAULT '',
+			status_token varchar(24) NOT NULL DEFAULT '',
+			hold_until datetime NULL,
+			confirm_src varchar(12) NOT NULL DEFAULT '',
 			rz_order_id varchar(64) NOT NULL DEFAULT '',
 			rz_payment_id varchar(64) NOT NULL DEFAULT '',
 			campaign varchar(120) NOT NULL DEFAULT '',
@@ -79,6 +87,35 @@ class NPD_DB {
 			KEY status (status),
 			KEY utr (utr),
 			KEY fy (fy)
+			) {$charset};"
+		);
+		$audit   = self::table( 'audit' );
+		$credits = self::table( 'credits' );
+		dbDelta(
+			"CREATE TABLE {$audit} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			donation_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			action varchar(24) NOT NULL DEFAULT '',
+			actor varchar(80) NOT NULL DEFAULT '',
+			note text NULL,
+			created_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			KEY donation_id (donation_id),
+			KEY action (action)
+			) {$charset};"
+		);
+		dbDelta(
+			"CREATE TABLE {$credits} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			hash varchar(20) NOT NULL DEFAULT '',
+			credit_date varchar(30) NOT NULL DEFAULT '',
+			amount_paise bigint(20) unsigned NOT NULL DEFAULT 0,
+			info varchar(255) NOT NULL DEFAULT '',
+			status varchar(12) NOT NULL DEFAULT 'open',
+			donation_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			created_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY hash (hash)
 			) {$charset};"
 		);
 		dbDelta(
@@ -130,6 +167,9 @@ class NPD_DB {
 				'name'       => $d['name'],
 				'email'      => $d['email'],
 				'phone'      => $d['phone'],
+				'city'       => isset( $d['city'] ) ? $d['city'] : '',
+				'state'      => isset( $d['state'] ) ? $d['state'] : '',
+				'pincode'    => isset( $d['pincode'] ) ? $d['pincode'] : '',
 				'pan_enc'    => isset( $d['pan_enc'] ) ? $d['pan_enc'] : null,
 				'address'    => isset( $d['address'] ) ? $d['address'] : '',
 				'consent'    => 1,
@@ -160,6 +200,7 @@ class NPD_DB {
 				'campaign'     => $d['campaign'],
 				'want_80g'     => $d['want_80g'] ? 1 : 0,
 				'fy'           => self::fy_for( $now ),
+				'status_token' => wp_generate_password( 16, false ),
 				'created_at'   => $now,
 			)
 		);
@@ -234,13 +275,43 @@ class NPD_DB {
 	 *
 	 * @param int    $id  Donation id.
 	 * @param string $utr Reference number, may be empty.
+	 * @param string $flag Review flag: dup_ref, unclear_ref, or empty.
 	 * @return bool
 	 */
-	public static function submit_utr( $id, $utr = '' ) {
+	public static function submit_utr( $id, $utr = '', $flag = '' ) {
 		global $wpdb;
 		$t = self::table( 'donations' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		return (bool) $wpdb->query( $wpdb->prepare( "UPDATE {$t} SET donor_claimed = 1, utr = %s WHERE id = %d AND status = 'pending' AND mode = 'upi'", $utr, $id ) );
+		return (bool) $wpdb->query( $wpdb->prepare( "UPDATE {$t} SET donor_claimed = 1, utr = %s, review_flag = %s WHERE id = %d AND status = 'pending' AND mode = 'upi'", $utr, $flag, $id ) );
+	}
+
+	/**
+	 * Save a bank statement match for a waiting donation. A suggestion only; it never confirms.
+	 *
+	 * @param int    $id   Donation id.
+	 * @param string $hash Statement row hash.
+	 * @param string $date Date text from the statement.
+	 */
+	public static function set_bank_match( $id, $hash, $date ) {
+		global $wpdb;
+		$t = self::table( 'donations' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query( $wpdb->prepare( "UPDATE {$t} SET bank_match = %s WHERE id = %d AND status = 'pending' AND mode = 'upi'", substr( $hash . '|' . $date, 0, 60 ), $id ) );
+	}
+
+	/**
+	 * Statement rows already tied to a donation, so one bank credit can only back one donation.
+	 *
+	 * @return string[]
+	 */
+	public static function used_bank_hashes() {
+		global $wpdb;
+		$t = self::table( 'donations' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$vals = $wpdb->get_col( "SELECT bank_match FROM {$t} WHERE bank_match <> '' AND status <> 'failed'" );
+		return array_map( function ( $v ) {
+			return strtok( (string) $v, '|' );
+		}, (array) $vals );
 	}
 
 	/**
@@ -344,7 +415,7 @@ class NPD_DB {
 		}
 		$limit  = isset( $args['limit'] ) ? max( 1, (int) $args['limit'] ) : 50;
 		$offset = isset( $args['offset'] ) ? max( 0, (int) $args['offset'] ) : 0;
-		$sql    = "SELECT d.*, n.name AS donor_name, n.email AS donor_email, n.phone AS donor_phone FROM {$d} d LEFT JOIN {$n} n ON n.id = d.donor_id WHERE " . implode( ' AND ', $where ) . ' ORDER BY d.id DESC LIMIT %d OFFSET %d';
+		$sql    = "SELECT d.*, n.name AS donor_name, n.email AS donor_email, n.phone AS donor_phone, n.city AS donor_city, n.state AS donor_state, n.pincode AS donor_pincode FROM {$d} d LEFT JOIN {$n} n ON n.id = d.donor_id WHERE " . implode( ' AND ', $where ) . ' ORDER BY d.id DESC LIMIT %d OFFSET %d';
 		$vals[] = $limit;
 		$vals[] = $offset;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
